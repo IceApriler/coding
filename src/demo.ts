@@ -1,9 +1,9 @@
 // interface
-interface Arg {
+interface Arg<T> {
   name: string,
-  age: number
+  age: T // 泛型
 }
-export const say = (arg: Arg) => {
+export const say = (arg: Arg<number>) => {
   return `我的叫${arg.name}，今年${arg.age}`
 }
 
