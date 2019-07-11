@@ -80,7 +80,7 @@ import { say } from './demo'
   }
 }
 
-// 对象结构和声明
+// 对象解构和声明
 {
   const obj = { a: 1, b: 2}
   const { a, b }: { a: number, b: number } = obj
@@ -89,8 +89,62 @@ import { say } from './demo'
 
 // 函数参数设置可选
 {
-  function func(name: string, age: number = 32) {
-    console.log(`I am ${name} 今年${age}岁`)
+  function func(name: string, age: number = 32, city?: string): string { // ?表示可选
+    console.log(`I am ${name} 今年${age}岁，来自${city}`)
+    return `I am ${name} 今年${age}岁，来自${city}`
   }
   func('Ironman')
+}
+
+// 解构也能用于函数声明
+{
+  type C = { name: string, age?: number }
+  function test({ name, age }: C):void {
+
+  }
+  test({ name: '解构也能用于函数声明' })
+}
+
+// 函数参数的类型有两种方法：一种是显式声明，一种赋默认值隐式声明
+{
+  // 显式声明类型，参数必传
+  function fn(a: string): void {
+    // a = 1
+  }
+  fn('')
+  // 隐式声明进行类型推导，参数可选
+  function f({ a = '', b = 0 } = {}): void {
+    // a = 1
+  }
+  f()
+}
+
+// 展开操作符
+{
+  class C {
+    p = 12
+    m() {
+    }
+  }
+  let c = new C()
+  let clone = { ...c }
+  clone.p; // ok
+  // clone.m(); // error!
+  // 其次，TypeScript编译器不允许展开泛型函数上的类型参数。这个特性会在TypeScript的未来版本中考虑实现
+}
+
+// 接口
+{
+  function printLabel(obj:{ label: string }) {
+    console.log('printLabel', obj.label)
+  }
+  // printLabel({label: '', size: ''})
+
+  interface LabelObj {
+    label: string
+  }
+  function printLabel2(obj:LabelObj) {
+    console.log('printLabel', obj.label)
+  }
+  printLabel2({ label: '' })
 }
