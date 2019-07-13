@@ -135,16 +135,172 @@ import { say } from './demo'
 
 // 接口
 {
-  function printLabel(obj:{ label: string }) {
-    console.log('printLabel', obj.label)
-  }
-  // printLabel({label: '', size: ''})
-
   interface LabelObj {
-    label: string
+    readonly label: string, // 必传，只读
+    text?: string, // 可选，可以修改
   }
-  function printLabel2(obj:LabelObj) {
+  function printLabel2(obj: LabelObj):void {
     console.log('printLabel', obj.label)
+    obj.text = '' // 修改
   }
   printLabel2({ label: '' })
+
+  interface Config {
+    color: string,
+    [propName: string]: string, // 索引签名
+  }
+  function setConfig(config: Config): void {
+
+  }
+  setConfig({ color: '', age: '2' }) // 可以传入任意符合要求参数
+}
+
+// 函数类型
+{
+  interface searchFunc {
+    (name: string, age: number): boolean // 函数调用签名：使用接口描述函数类型
+  }
+
+  let search: searchFunc // 声明一个函数类型的变量
+  search = () => {
+    return false
+  }
+  search('', 2)
+
+  const search2: searchFunc = () => { // 声明 + 赋值
+    return !0
+  }
+  search('-', 3)
+
+  const search3: searchFunc = (name: string, age: number): boolean => {
+    return !0
+  }
+
+  const search4: searchFunc = (nameCustom: string, ageCustom: number): boolean => { // 参数名称可以自定义
+    return !0
+  }
+}
+
+// 可索引的类型
+{
+  // 1.数字索引类型：可以声明数组和对象，要求索引为数字
+  interface NumberIndexCollection {
+    [index: number]: number
+  }
+
+  const obj: NumberIndexCollection = { 10: 1 }
+  const arr: NumberIndexCollection = [99]
+
+  // 2.字符串索引类型：只可以声明对象，索引既可以是数字也可以是字符串( obj[0] === obj['0'] )
+  interface StringIndexCollection{
+    [index: string]: number
+  }
+  const obj2: StringIndexCollection = { 10: 1, age: 10 }
+
+  // 3.数字索引和字符串索引可以共存：数字索引的返回值必须是字符串索引返回值类型的子类型
+  class Animal {
+    name: string
+  }
+  class Dog extends Animal {
+    breed: string
+  }
+
+  interface NotOkay {
+    [x: number]: Dog, // Dog为Animal的子类型
+    [x: string]: Animal
+  }
+
+  const test: NotOkay = { 0: new Dog(), key: new Animal() }
+
+  // 4.设置索引签名只读
+  interface ReadonlyArray{
+    readonly [i: number]: string
+  }
+  const arr2: ReadonlyArray = ['A', 'B']
+  // arr2[1] = 'C' // error
+}
+
+// 类类型
+{
+  // 接口描述了类的公共部分，而不是公共和私有两部分。 它不会帮你检查类是否具有某些私有成员
+  interface ClockInterface {
+    currentTime: Date
+    // private currentTimeTemp: Date, // error
+    setTime(d: Date): void
+  }
+  class clock implements ClockInterface {
+    currentTime: Date
+    private currentTimeTemp: Date
+    constructor(h: number, m: number) { }
+    setTime(d: Date) {
+      this.currentTime = d
+    }
+  }
+}
+
+// 类静态部分与实例部分的区别( 有难度，需要反复阅读文档 )
+{}
+
+// 接口的继承
+{
+  // 声明一个接口：形状
+  interface Shape {
+    color: string
+  }
+  // 声明一个接口：圆形，继承自形状
+  interface Square extends Shape {
+    sideLength: number
+  }
+  let square: Square = { color: '', sideLength: 10 }
+  let square2 = <Square>{}
+  let square3 = {} as Square
+
+  // 声明一个接口：椭圆，集成自形状和圆形
+  interface Ellipse extends Shape, Square{
+    center: number[]
+  }
+  let ellipse: Ellipse = { color: '', sideLength: 10, center: [10, 10] }
+}
+
+// 混合类型
+{
+  interface Counter {
+    (start: number): string,
+    interval: number,
+    reset(): void
+  }
+  const getCounter = (): Counter => {
+    let counter = function(start: number) {} as Counter // 强制类型断言
+    counter.interval = 100
+    counter.reset = function() {}
+    return counter
+  }
+
+  const c = getCounter()
+}
+
+// 字面量也可以作为类型
+{
+  interface Con {
+    log(str: '=='): number
+    log(str: '--'): number
+    log(str: string): number
+  }
+
+  const con: Con = {
+    log: (str: string) =>{
+     
+      return 1
+    }
+  }
+  con.log('==')
+  con.log('--')
+}
+
+function isDoubleEqual(str: string) : str is "==" {
+  return str === "=="
+}
+
+function isDoubleSlash(str: string) : str is "--" {
+  return str === "--"
 }
