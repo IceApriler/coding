@@ -133,7 +133,7 @@ import { say } from './demo'
   // 其次，TypeScript编译器不允许展开泛型函数上的类型参数。这个特性会在TypeScript的未来版本中考虑实现
 }
 
-// 接口
+// 接口(用来描述约束条件)
 {
   interface LabelObj {
     readonly label: string, // 必传，只读
@@ -289,18 +289,311 @@ import { say } from './demo'
 
   const con: Con = {
     log: (str: string) =>{
-     
-      return 1
+      if (str === '==') {
+        return 1
+      } else if (str === '--') {
+        return 2
+      } else {
+        return 3
+      }
     }
   }
   con.log('==')
   con.log('--')
 }
 
-function isDoubleEqual(str: string) : str is "==" {
-  return str === "=="
+// 命名空间可以对枚举进行扩展
+enum Color {
+  red = 1,
+  green = 2,
+  blue = 4
+}
+namespace Color {
+  export function mixColor(colorName: string) {
+    if (colorName == "yellow") {
+      return Color.red + Color.green;
+    }
+    else if (colorName == "white") {
+      return Color.red + Color.green + Color.blue;
+    }
+    else if (colorName == "magenta") {
+      return Color.red + Color.blue;
+    }
+    else if (colorName == "cyan") {
+      return Color.green + Color.blue;
+    }
+  }
 }
 
-function isDoubleSlash(str: string) : str is "--" {
-  return str === "--"
+console.warn('===', Color.mixColor('yellow'))
+
+// 类的继承
+{
+  // 基类，也叫超类
+  class Animal {
+    // name: string // 构造函数中使用(public name: string)语法，参数属性通过给构造函数参数前面添加一个访问限定符来声明
+    readonly age: number // 只读属性只能在声明时，或者构造函数中初始化
+    private createTime: Date // 私有属性，只能Animal类内部访问
+    protected budget: number // 受保护的属性，只能在基类和子类内部访问
+
+    // 构造函数声明为被保护，则无法在类外实例化，但是可以被子类继承后实例化子类
+    protected constructor(public name: string, age: number = 10) {
+      this.name = name
+      this.age = age
+      this.createTime = new Date()
+      this.budget = 999
+    }
+    move(distance: number):void {
+      console.log(`${this.name}${this.age}岁，移动了${distance}米`)
+    }
+  }
+  // Animal的派生类，也叫子类 
+  class Dog extends Animal {
+    private from: string // 私有属性，只能Dog类内部访问
+    // 派生类的构造函数必须包含super的调用
+    constructor(name: string) {
+      // this.from = '北京' // error
+      super(name, 2) // 执行父类的构造方法(而且必须先调用super，然后再执行自有构造逻辑)
+      this.from = '北京'
+    }
+    move(distance: number):void {
+      console.log(`动物园财政预算${this.budget}元，${this.name}今年${this.age}岁了，来自${this.from}, 奔跑了${distance}米`)
+    }
+    bark() {
+      console.log('汪汪')
+    }
+  }
+  // const animal = new Animal('动物') // Animal 构造函数被声明为被保护
+  const dog = new Dog('狗狗')
+  dog.name = '金毛狗狗'
+  // dog.age = 200 // read-only
+  dog.bark()
+  dog.move(20)
+  dog.bark()
+}
+
+// getters & setters
+{
+  let passWord = 'pass'
+  class Employee {
+    private _userName: string
+
+    // 只带有 get不带有 set的存取器自动被推断为 readonly
+    get userName(): string {
+      return this._userName + '--'
+    }
+    set userName(name: string) { // get不能具有返回值包括void
+      if (passWord === 'pass') {
+        this._userName = name
+      } else {
+        console.log('password error')
+      }
+    }
+  }
+  let emp = new Employee()
+  console.log(emp.userName)
+  emp.userName = 'zhang'
+  console.log(emp.userName)
+}
+
+// 静态属性
+{
+  class Grid {
+    static origin = { x: 0, y: 0 } // 静态属性无需实例化就已经在类上初始化了，只能通过类名访问。（其他属性都是依赖于实例，实例化之后才会初始化）
+    constructor(public scale: number) {}
+    caculateDistanceFromOrigin(point: { x: number, y: number }) {
+      const { x, y } = point
+      const xDist = x - Grid.origin.x
+      const yDist = y - Grid.origin.y
+      return Math.sqrt(xDist * xDist + yDist * yDist) / this.scale
+    }
+  }
+  const grid1 = new Grid(1)
+  const grid2 = new Grid(2)
+  console.log(grid1.caculateDistanceFromOrigin({ x: 3, y: 4 }), grid2.caculateDistanceFromOrigin({ x: 15, y: 20 }))
+}
+
+// 抽象类
+{
+  // 抽象类
+  abstract class Department {
+    constructor(public name: string) {}
+    printName() {
+      console.log(`部门名称为${this.name}`)
+    }
+    abstract printMeeting(): void // 必须在派生类中实现
+  }
+  class AccountDepartment extends Department {
+    constructor() {
+      super('财务部')
+    }
+    printMeeting(): void {
+      console.log('The Accounting Department meets each Monday at 10am.')
+    }
+    generateReports(): void {
+      console.log('Generating accounting reports...')
+    }
+  }
+  const department = new AccountDepartment()
+  department.printName()
+  department.printMeeting()
+  department.generateReports()
+}
+
+// 构造函数
+{
+  class Greeter {
+    static standardGreeting = "Hello, there"
+    greeting: string;
+    greet() {
+      if (this.greeting) {
+        return "Hello, " + this.greeting
+      }
+      else {
+        return Greeter.standardGreeting
+      }
+    }
+  }
+
+  let greeter1: Greeter // Greeter类的实例的类型是 Greeter
+  greeter1 = new Greeter()
+  console.log(greeter1.greet())
+
+  let greeterMaker: typeof Greeter = Greeter // 声明greeterMaker的类型为Greeter类的类型
+  greeterMaker.standardGreeting = "Hey there!"
+
+  let greeter2: Greeter = new greeterMaker()
+  console.log(greeter2.greet())
+}
+
+// 把类当做接口使用
+{
+  // 类定义会创建两个东西：类的实例类型和一个构造函数，因为可以创建类型，所以可以使用接口继承类的类型
+  class Point {
+    x: number
+    y: number
+  }
+  interface Point3d extends Point {
+    z: number
+  }
+
+  const point: Point3d = { x: 10, y: 10, z: 10 }
+  console.log(point)
+}
+
+// 声明一个函数
+{
+  const add: (baseValue: number, incrementValue: number) => number = function(x: number, y: number): number {
+    return x + y
+  }
+  const add2: (baseValue: number, incrementValue: number) => number = (x: number, y: number): number => x + y
+  const add3 = (x: number, y: number): number => x + y
+  const add4 = (x: number, y: number) => x + y // 函数类型、返回值类型会进行自动推导，可以省略，这样更简洁。
+}
+
+{
+  function buildName(firstName: string, lastName?: string) {
+    // ...
+  }
+  function buildName2(firstName: string, lastName = "Smith") {
+    // ...
+  }
+  function buildName3(firstName: string, lastName = "Smith", ...restName: string[]) {
+    // ...
+  }
+}
+
+// 函数重载(适用于根据传递不同参数，执行不同操作，返回不同值)
+{
+  // 重载流程：查找重载列表，尝试使用第一个重载定义。 如果匹配的话就使用这个，所以一定要把最精确的定义放在最前面
+  function getDistance(point: { x: number, y: number }): number
+  function getDistance(point: number): number
+
+  // any 并不是重载列表的一部分，重载只有上面👆两个
+  function getDistance(point: any): any {
+    if (typeof point === 'object') {
+      const { x, y } = point
+      return Math.sqrt(x * x + y * y)
+    } else {
+      return point
+    }
+  }
+  console.log(getDistance({ x: 3, y: 4 }))
+  console.log(getDistance(1000))
+}
+
+// 泛型
+{
+  // 声明一个泛型函数
+  function identity<T>(arg: T): T {
+    // 如果使用了泛型，那就意味着参数arg可以是任意类型
+    if (typeof arg === 'string') {
+      console.log(arg.length)
+    }
+    return arg
+  }
+  identity('')
+
+  let myIdentity: <U>(arg: U) => U = identity //  <U>(arg: U) => U 为函数类型
+  let myIdentity2 = identity
+  let myIdentity3:{ <U>(arg: U): U } = identity // { <U>(arg: U): U } 为，使用签名的对象字面量声明函数类型
+
+  // 泛型接口
+  interface Identity {
+    <H>(arg: H): H
+  }
+  let myIdentity4: Identity = identity
+}
+
+// 枚举值
+{
+  // 当所有枚举成员都拥有字面量枚举值时，枚举成员可以作为类型使用
+  enum ShapeKind {
+    Circle,
+    Square,
+  }
+
+  interface Circle {
+    kind: ShapeKind.Circle // 枚举成员作为类型使用，kind只能是 ShapeKind.Circle 的值
+    radius: number
+  }
+
+  interface Square {
+    kind: ShapeKind.Square
+    sideLength: number
+  }
+
+  let c: Circle = {
+    // kind: ShapeKind.Square, // error 不符合接口的类型约束
+
+    kind: ShapeKind.Circle,
+    radius: 100,
+  }
+}
+
+{
+  enum E {
+    Foo,
+    Bar,
+    Test = 'Foo2'
+  }
+
+  // 枚举类型本身变成了每个枚举成员的联合
+  // x: E 等价于 E.Foo | E.Bar
+  function f(x: E) {
+    // if (x !== E.Foo || x !== E.Bar) {
+    //   // error 总是为true，官方提供的这段代码有点挫啊，哪怕脱离ts，正常逻辑也不应该这么写
+    // }
+  }
+
+  // 在运行时，枚举是真正存在的对象
+  function fn(obj: { Foo: number }) {
+    return obj.Foo
+  }
+  fn(E)
+
+  // 反向映射（通过值查名称）
+  const value = E['Foo'] // 不可为Test？
+  const name = E[value]
+  console.log('FooVal', name)
 }

@@ -24,6 +24,7 @@ gulp.task("copy-html", function () {
 })
 
 function bundle() {
+  console.log('update')
   return watchedBrowserify
       .transform('babelify', {
         presets: ['es2015'],
