@@ -19,6 +19,8 @@ import { say } from './demo'
     house: Array<number|string>, // 数组泛型: 动态声明类型
     tuple: [string, number], // tuple
   }
+
+  type a = Pick<Obj, 'name' | "age"> // 提取类型约束
   
   const obj: Obj = {} as Obj
   const obj2: Obj = <Obj>{}
@@ -134,6 +136,7 @@ import { say } from './demo'
 }
 
 // 接口(用来描述约束条件)
+// 用来定义对象的类型
 {
   interface LabelObj {
     readonly label: string, // 必传，只读
@@ -597,3 +600,66 @@ console.warn('===', Color.mixColor('yellow'))
   const name = E[value]
   console.log('FooVal', name)
 }
+
+// any
+{
+  // 如果定义的时候没有赋值，不管之后有没有赋值，都会被推断成 any 类型而完全不被类型检查
+  // any类型的变量允许被复制任意类型，允许调用任何方法，允许返回任意类型
+  let name
+  name = 3
+  name = ''
+  if (false) {
+    name.getName()
+    name.cc()
+    name()
+  }
+}
+
+// 联合类型
+{
+  // 当 TypeScript 不确定一个联合类型的变量到底是哪个类型的时候，我们只能访问此联合类型的所有类型里共有的属性或方法：
+  function getLength(something: string | number): number {
+    return something.length
+  }
+  function getString(something: string | number): string {
+    if (typeof something === 'string') {
+      console.log(something.length)
+    }
+    return something.toString()
+  }
+}
+
+{
+  type name = keyof any // string | number | symbol  // 读取除了key的类型
+  type name2 = keyof number // "toString" | "toFixed" | "toExponential" | "toPrecision" | "valueOf" | "toLocaleString" // 读取除了可枚举的字面量key
+  // const name: name2 = "toString"
+
+  // type Record<K extends keyof any, T> = {
+  //   [P in K]: T
+  // }
+  // Record<string, any>
+}
+
+// 不同于 interface 只能定义对象类型， type 声明的方式可以定义组合类型，交叉类型，原始类型
+{
+
+}
+
+// extends
+{
+  // 类的继承
+  class Person {
+
+  }
+  class Man extends Person {
+
+  }
+  // 类型约束
+  type a  = number | string | boolean | undefined
+  type b = Exclude<a, undefined>
+  type c = a extends undefined ? never : a // 使用泛型才会遍历
+  type test  = number extends undefined ? true : false
+  type Exclude2<T, U> = T extends U ? never : T
+  type g = Exclude2<a, undefined> // 使用泛型才会遍历
+}
+
