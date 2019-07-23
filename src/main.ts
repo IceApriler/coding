@@ -618,9 +618,9 @@ console.warn('===', Color.mixColor('yellow'))
 // 联合类型
 {
   // 当 TypeScript 不确定一个联合类型的变量到底是哪个类型的时候，我们只能访问此联合类型的所有类型里共有的属性或方法：
-  function getLength(something: string | number): number {
-    return something.length
-  }
+  // function getLength(something: string | number): number {
+  //   return something.length
+  // }
   function getString(something: string | number): string {
     if (typeof something === 'string') {
       console.log(something.length)
@@ -630,8 +630,32 @@ console.warn('===', Color.mixColor('yellow'))
 }
 
 {
+  // keyof，对类型进行拆解，拆解为联合类型（ 具体如何拆解？猜测：将keyof的类型限制一个变量(对象)时（万物皆对象，包括字符串和数字），该变量(对象)的key可以是什么类型。 ）
+  type ty = keyof any // string | number | symbol 解释：一个类型为any的变量，作为一个对象，此时这个对象还没有确定数据类型，所以它的key可以是string，number，symbol；
+  type d = keyof string // number | "toString" | "charAt" | etc.. 解释：一个类型为string的变量，由于类型已经确定，所以他的key...
+
+  // a的类型已经确定，只能是name和age
+  type ob = {
+    name: string,
+    age: number
+  }
+  type a = keyof ob // 'name' | 'age'
+
+  // b和c的类型是动态的，是string类型
+  // 冒号不严格，string兼容number
+  type ob1 = {
+    [x: string]: string
+  }
+  type b = keyof ob1 // string | number
+
+  // in 严格，必须是string
+  type ob2 = {
+    [k in string]: string
+  }
+  type c = keyof ob2 // string
+  
   type name = keyof any // string | number | symbol  // 读取除了key的类型
-  type name2 = keyof number // "toString" | "toFixed" | "toExponential" | "toPrecision" | "valueOf" | "toLocaleString" // 读取除了可枚举的字面量key
+  type name2 = keyof (number | string) // "toString" | "toFixed" | "toExponential" | "toPrecision" | "valueOf" | "toLocaleString" // 读取除了可枚举的字面量key
   // const name: name2 = "toString"
 
   // type Record<K extends keyof any, T> = {
@@ -643,6 +667,22 @@ console.warn('===', Color.mixColor('yellow'))
 // 不同于 interface 只能定义对象类型， type 声明的方式可以定义组合类型，交叉类型，原始类型
 {
 
+}
+
+{
+  type b = keyof Object
+
+  type KVInfer<T> = {
+    [K in keyof T]: T[K]
+  }
+
+  const test: KVInfer<Object> = { valueOf: () => Object }
+
+  interface Obj {
+    name: string,
+    age?: number
+  }
+  const test2: KVInfer<Obj> = { name: '' }
 }
 
 // extends
