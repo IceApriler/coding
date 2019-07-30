@@ -4,7 +4,7 @@ interface Arg<T> {
   age: T // 泛型
 }
 export const say = (arg: Arg<number>) => {
-  return `我的叫${arg.name}，今年${arg.age}`
+  return `我的叫--${arg.name}，今年${arg.age}`
 }
 
 // class
