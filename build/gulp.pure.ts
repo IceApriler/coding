@@ -9,7 +9,7 @@ import * as babel from "gulp-babel"
 import * as browserify from "browserify"
 import * as source from "vinyl-source-stream"
 import chalk from "chalk"
-import { src2dist, getSuffix, vinylIsTs, vinylIsJs } from './gulp.utils'
+import { src2dist, vinylIsTs, vinylIsJs } from './gulp.utils'
 
 const tsProject = ts.createProject('tsconfig.json')
 
@@ -24,7 +24,7 @@ export class Pure {
 
   readonly dist: string
   readonly src: string | string[]
-  private browser: browserify.BrowserifyObject
+  protected browser: browserify.BrowserifyObject
 
   constructor(config: Config) {
     const { dist, src } = config
@@ -98,50 +98,27 @@ export class Pure {
     log.info(`Starting ${chalk.cyan("'build-file'")} ${chalk.magenta(filename || '')}`)
 
     let basePath: string,
-        srcPath: string | string[],
-        stream: NodeJS.ReadWriteStream
+        srcPath: string | string[]
     if (filename) {
       basePath = path.resolve(__dirname, '../src')
       srcPath = filename
-
-      stream = gulp.src(srcPath, { base: basePath })
-      if (getSuffix(filename) === 'ts') {
-        stream = stream
-          .pipe(sourcemaps.init())
-          .pipe(tsProject())
-          .pipe(babel())
-          .pipe(sourcemaps.write())
-      }
-      stream = stream
-        .pipe(
-          gulpIf(
-            vinylIsJs,
-            sourcemaps.init()
-            .pipe(babel())
-            .pipe(sourcemaps.write())
-          )
-        )
-        .pipe(gulp.dest(this.dist))
     } else {
       basePath = ''
       srcPath = this.src
-
-      stream = gulp
-        .src(srcPath, { base: basePath })
-        .pipe(sourcemaps.init())
-        .pipe(
-          gulpIf(vinylIsTs, tsProject())
-        )
-        .pipe(
-          gulpIf(
-            vinylIsJs, 
-            babel()
-          )
-        )
-        .pipe(sourcemaps.write())
-        .pipe(gulp.dest(this.dist))
     }
-    return stream
+    return gulp.src(srcPath, { base: basePath })
+      .pipe(sourcemaps.init())
+      .pipe(
+        gulpIf(vinylIsTs, tsProject())
+      )
+      .pipe(
+        gulpIf(
+          vinylIsJs, 
+          babel()
+        )
+      )
+      .pipe(sourcemaps.write())
+      .pipe(gulp.dest(this.dist))
       .on('end', () => {
         log.info(`Finished ${chalk.cyan("'build-file'")}`)
         this.buildBrowser() // 待优化，最好只针对js文件
