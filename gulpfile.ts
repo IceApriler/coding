@@ -1,4 +1,4 @@
-const gulp = require('gulp')
-const Pure = require('./build/gulp.pure').Pure
+import { Pure } from './build/gulp.pure'
+import { config } from './build/gulp.config'
 
-new Pure()
+new Pure(config)

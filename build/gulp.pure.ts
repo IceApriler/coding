@@ -5,105 +5,146 @@ import * as sourcemaps from "gulp-sourcemaps"
 import * as ts from "gulp-typescript"
 import * as gulpIf from "gulp-if"
 import * as log from "fancy-log"
-import * as vinyl from "vinyl"
+import * as babel from "gulp-babel"
+import * as browserify from "browserify"
+import * as source from "vinyl-source-stream"
 import chalk from "chalk"
+import { src2dist, getSuffix, vinylIsTs, vinylIsJs } from './gulp.utils'
 
 const tsProject = ts.createProject('tsconfig.json')
 
-const PATHS = {
-  dist: path.resolve(__dirname, '../dist'),
-  src: path.resolve(__dirname, '../src/**')
+export type Done = (error?: any) => void
+
+export interface Config {
+  dist: string
+  src: string | string[]
 }
 
-type Done = (error?: any) => void
-
 export class Pure {
-  constructor() {
+
+  readonly dist: string
+  readonly src: string | string[]
+  private browser: browserify.BrowserifyObject
+
+  constructor(config: Config) {
+    const { dist, src } = config
+    this.dist = dist
+    this.src = src
     this.init()
   }
+
   init() {
-    gulp.task("cleanDist", function(done: Done) {
-      fs.emptyDirSync(PATHS.dist)
+    this.createCleanDist()
+    this.createBuildFile()
+    this.createWatch()
+    this.createBrowser()
+
+    gulp.task("default", gulp.series('clean-dist', 'build-file'))
+    gulp.task('dev', gulp.series('clean-dist', 'build-file', 'watch'))
+  }
+
+  createCleanDist() {
+    gulp.task("clean-dist", (done: Done) => {
+      fs.emptyDirSync(this.dist)
       done()
     })
+  }
 
-    function getSuffix(filename: string) {
-      const index = filename.lastIndexOf(".")
-      return filename.substr(index + 1)
-    }
-
-    function src2dist(filename: string) {
-      const relativePath = path.relative(__dirname, filename).split(path.sep).join('/')
-      const projectPath = relativePath.replace(/^(..\/)*src\//g, '')
-      const distPath = path.join(PATHS.dist, projectPath)
-      return distPath
-    }
-
-    function isTs(fs: vinyl) {
-      return fs.extname === '.ts'
-    }
-
-    function buildFile (filename?: string) {
-      log.info(`Starting ${chalk.cyan("'buildFile'")} ${chalk.magenta(filename || '')}`)
-
-      let basePath: string,
-          srcPath: string | string[],
-          stream: NodeJS.ReadableStream
-      if (filename) {
-        basePath = path.resolve(__dirname, '../src')
-        srcPath = filename
-
-        stream = gulp.src(srcPath, { base: basePath })
-        if (getSuffix(filename) === 'ts') {
-          stream = stream
-            .pipe(tsProject())
-            .pipe(sourcemaps.init())
-            .pipe(sourcemaps.write())
-        }
-        stream = stream
-          .pipe(gulp.dest(PATHS.dist))
-      } else {
-        basePath = ''
-        srcPath = PATHS.src
-
-        stream = gulp
-          .src(srcPath, { base: basePath })
-          .pipe(
-            gulpIf(isTs, tsProject())
-          )
-          .pipe(sourcemaps.init())
-          .pipe(sourcemaps.write())
-          .pipe(gulp.dest(PATHS.dist))
-      }
-      return stream
-        .on('end', () => {
-          log.info(`Finished ${chalk.cyan("'buildFile'")}`)
-        })
-    }
-    
-    gulp.task("build-file", function() {
-      return buildFile()
+  createBuildFile() {
+    gulp.task("build-file", () => {
+      return this.buildFile()
     })
+  }
 
-    gulp.task("watch", function(done: Done) {
-      const tsWatcher = gulp.watch(PATHS.src)
+  createWatch() {
+    gulp.task("watch", (done: Done) => {
+      const tsWatcher = gulp.watch(this.src)
       ;['change', 'add'].forEach(event => {
         tsWatcher.on(event, (filename: string) => {
-          buildFile(filename)
+          this.buildFile(filename)
         })
       })
       ;['unlink', 'unlinkDir'].forEach(event => {
         tsWatcher.on(event, (filename: string) => {
-          log.info(`Starting ${chalk.cyan("'delete'")} ${chalk.magenta(filename || '')}`)
-          fs.remove(src2dist(filename).replace('.ts', '.js'), function() {
-            log.info(`Finished ${chalk.cyan("'delete'")}`)
+          log.info(`Starting ${chalk.cyan("'delete-file'")} ${chalk.magenta(filename || '')}`)
+          fs.remove(src2dist(filename, this.dist).replace('.ts', '.js'), () => {
+            log.info(`Finished ${chalk.cyan("'delete-file'")}`)
           })
         })
       })
       done()
     })
-    
-    gulp.task("default", gulp.series('cleanDist', 'build-file'))
-    gulp.task('dev', gulp.series('cleanDist', 'build-file', 'watch'))
+  }
+
+  createBrowser() {
+    this.browser = browserify({
+      entries: path.resolve(__dirname, '../dist/index.js'),
+      debug: true
+    })
+  }
+
+  buildBrowser() {
+    log.info(`Starting ${chalk.cyan("'browser-build'")}`)
+    return this.browser.bundle()
+      .on('error', log.error.bind(log, 'Browserify Error'))
+      .pipe(source('bundle.js'))
+      .pipe(gulp.dest(this.dist))
+      .on('end', () => {
+        log.info(`Finished ${chalk.cyan("'browser-build'")}`)
+      })
+  }
+
+  buildFile (filename?: string) {
+    log.info(`Starting ${chalk.cyan("'build-file'")} ${chalk.magenta(filename || '')}`)
+
+    let basePath: string,
+        srcPath: string | string[],
+        stream: NodeJS.ReadWriteStream
+    if (filename) {
+      basePath = path.resolve(__dirname, '../src')
+      srcPath = filename
+
+      stream = gulp.src(srcPath, { base: basePath })
+      if (getSuffix(filename) === 'ts') {
+        stream = stream
+          .pipe(sourcemaps.init())
+          .pipe(tsProject())
+          .pipe(babel())
+          .pipe(sourcemaps.write())
+      }
+      stream = stream
+        .pipe(
+          gulpIf(
+            vinylIsJs,
+            sourcemaps.init()
+            .pipe(babel())
+            .pipe(sourcemaps.write())
+          )
+        )
+        .pipe(gulp.dest(this.dist))
+    } else {
+      basePath = ''
+      srcPath = this.src
+
+      stream = gulp
+        .src(srcPath, { base: basePath })
+        .pipe(sourcemaps.init())
+        .pipe(
+          gulpIf(vinylIsTs, tsProject())
+        )
+        .pipe(
+          gulpIf(
+            vinylIsJs, 
+            babel()
+          )
+        )
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest(this.dist))
+    }
+    return stream
+      .on('end', () => {
+        log.info(`Finished ${chalk.cyan("'build-file'")}`)
+        this.buildBrowser() // 待优化，最好只针对js文件
+      })
   }
 }
