@@ -17,6 +17,10 @@ export function vinylIsTs(fs: vinyl) {
   return fs.extname === '.ts'
 }
 
+export function vinylIsNotTs(fs: vinyl) {
+  return fs.extname !== '.ts'
+}
+
 export function vinylIsJs(fs: vinyl) {
   return fs.extname === '.js'
 }

@@ -17,19 +17,22 @@ export type Done = (error?: any) => void
 
 export interface Config {
   dist: string
-  src: string | string[]
+  src: string | string[],
+  page: string
 }
 
 export class Pure {
 
   readonly dist: string
   readonly src: string | string[]
+  readonly page: string
   protected browser: browserify.BrowserifyObject
 
   constructor(config: Config) {
-    const { dist, src } = config
+    const { dist, src, page } = config
     this.dist = dist
     this.src = src
+    this.page = page
     this.init()
   }
 
