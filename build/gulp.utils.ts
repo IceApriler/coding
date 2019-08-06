@@ -6,9 +6,9 @@ export function getSuffix(filename: string) {
   return filename.substr(index + 1)
 }
 
-export function src2dist(filename: string, dist: string) {
+export function src2dist(filename: string, dist: string, srcRegExp: RegExp) {
   const relativePath = path.relative(__dirname, filename).split(path.sep).join('/')
-  const projectPath = relativePath.replace(/^(..\/)*src\//g, '')
+  const projectPath = relativePath.replace(srcRegExp, '')
   const distPath = path.join(dist, projectPath)
   return distPath
 }

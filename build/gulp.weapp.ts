@@ -12,19 +12,25 @@ const tsProject = ts.createProject('tsconfig.json')
 
 export type Done = (error?: any) => void
 
-export interface Config {
+export interface WeappConfig {
   dist: string
-  src: string | string[]
+  src: string | string[],
+  srcPath: string,
+  srcRegExp: RegExp
 }
 
 export class Weapp {
   readonly dist: string
   readonly src: string | string[]
+  readonly srcPath: string
+  readonly srcRegExp: RegExp
 
-  constructor(config: Config) {
-    const { dist, src } = config
+  constructor(config: WeappConfig) {
+    const { dist, src, srcPath, srcRegExp } = config
     this.dist = dist
     this.src = src
+    this.srcPath = srcPath
+    this.srcRegExp = srcRegExp
     this.init()
   }
 
@@ -61,7 +67,7 @@ export class Weapp {
       ;['unlink', 'unlinkDir'].forEach(event => {
         tsWatcher.on(event, (filename: string) => {
           log.info(`Starting ${chalk.cyan("'delete-file'")} ${chalk.magenta(filename || '')}`)
-          const _filename = src2dist(filename, this.dist)
+          const _filename = src2dist(filename, this.dist, this.srcRegExp)
             .replace('.ts', '.js')
             .replace('.styl', '.css')
           fs.remove(_filename, () => {
@@ -79,7 +85,7 @@ export class Weapp {
     let basePath: string,
         srcPath: string | string[]
     if (filename) {
-      basePath = path.resolve(__dirname, '../src')
+      basePath = this.srcPath
       srcPath = filename
     } else {
       basePath = ''
@@ -90,12 +96,6 @@ export class Weapp {
       .pipe(
         gulpIf(vinylIsTs, tsProject())
       )
-      // .pipe(
-      //   gulpIf(
-      //     vinylIsJs, 
-      //     babel()
-      //   )
-      // )
       .pipe(sourcemaps.write())
       .pipe(gulp.dest(this.dist))
       .on('end', () => {
