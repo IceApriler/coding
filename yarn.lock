@@ -638,6 +638,11 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
+"@dragongate/miniprogram-api-typings@^2.7.13":
+  version "2.7.13"
+  resolved "https://registry.yarnpkg.com/@dragongate/miniprogram-api-typings/-/miniprogram-api-typings-2.7.13.tgz#afa9f1447473f20d67e7df9f5698832a0b753c7a"
+  integrity sha512-S/wz8GhApzqlsEDuzkcuxenp2SPYSqvfn6ED9yAb6d6YY1STOW2PowG49y/m8RNFk8qOv6e/cP0p+3VuXV7oWw==
+
 "@gulp-sourcemaps/identity-map@1.X":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@gulp-sourcemaps/identity-map/-/identity-map-1.0.2.tgz#1e6fe5d8027b1f285dc0d31762f566bccd73d5a9"
@@ -3023,6 +3028,11 @@ minipass@^2.2.1, minipass@^2.3.5:
   dependencies:
     safe-buffer "^5.1.2"
     yallist "^3.0.0"
+
+miniprogram-api-typings@^2.7.7-1:
+  version "2.7.7-1"
+  resolved "https://registry.yarnpkg.com/miniprogram-api-typings/-/miniprogram-api-typings-2.7.7-1.tgz#8969d0896dedb60cb4da26001169c51de662f46b"
+  integrity sha512-hErfP0S54WUyb7Ee+43CFIC9MR5LIP97xT1wmnrxUFBMzY3QguCOT9RkAxPg6X7i/Z9P1KHwNqv8w47dKGGv/g==
 
 minizlib@^1.2.1:
   version "1.2.1"

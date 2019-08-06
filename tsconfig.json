@@ -2,12 +2,18 @@
   "include": [
     "build/**/*.ts",
     "gulpfile.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "miniprogram/**/*.ts",
   ],
   "compilerOptions": {
     "noImplicitAny": true,
     "target": "es6",
     "moduleResolution": "node",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "typeRoots": [
+      "node_modules/@types",
+      // "node_modules/miniprogram-api-typings",
+      "node_modules/@dragongate/miniprogram-api-typings"
+    ]
   }
 }
