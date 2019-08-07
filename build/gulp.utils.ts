@@ -24,3 +24,22 @@ export function vinylIsNotTs(fs: vinyl) {
 export function vinylIsJs(fs: vinyl) {
   return fs.extname === '.js'
 }
+
+export function vinylIsStyl(fs: vinyl) {
+  return fs.extname === '.styl'
+}
+
+export function getNowTime() {
+  function fillZero(num: number): string {
+    return num < 10 ? `0${num}` : `${num}`
+  }
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = fillZero(now.getMonth() + 1)
+  const date = fillZero(now.getDate())
+  const hour = fillZero(now.getHours())
+  const minute = fillZero(now.getMinutes())
+  const second = fillZero(now.getSeconds())
+  const currentTime = `${year}-${month}-${date} ${hour}:${minute}:${second}`
+  return currentTime
+}

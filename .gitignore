@@ -4,3 +4,8 @@ node_modules
 .vscode
 package-lock.json
 minidist
+
+# 生成的文件
+src/**/*.js
+src/**/*.js.map
+src/**/*.wxss

@@ -4,6 +4,7 @@
     "gulpfile.ts",
     "src/**/*.ts",
     "miniprogram/**/*.ts",
+    "template/**/*.ts",
   ],
   "compilerOptions": {
     "noImplicitAny": true,
@@ -12,8 +13,8 @@
     "strictNullChecks": true,
     "typeRoots": [
       "node_modules/@types",
-      // "node_modules/miniprogram-api-typings",
-      "node_modules/@dragongate/miniprogram-api-typings"
+      "node_modules/miniprogram-api-typings",
+      // "node_modules/@dragongate/miniprogram-api-typings"
     ]
   }
 }
