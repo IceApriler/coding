@@ -703,3 +703,21 @@ console.warn('===', Color.mixColor('yellow'))
   type g = Exclude2<a, undefined> // 使用泛型才会遍历
 }
 
+{
+  interface a {
+    name: string
+  }
+  interface b extends a {
+    age: number
+  }
+
+  const info: b = {
+    name: '',
+    age: 12
+  }
+
+  interface Data {
+    arr: { name: string }[]
+  }
+  const arr: Data['arr'] = []
+}
