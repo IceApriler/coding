@@ -721,3 +721,30 @@ console.warn('===', Color.mixColor('yellow'))
   }
   const arr: Data['arr'] = []
 }
+
+{
+  interface Obj {
+    age: number
+  }
+  function print<T extends Obj>(list: T, field: keyof T) {
+    
+    const val = list[field]
+
+    // const field2 = 'hehe'
+    // const val2 = list[field2]
+  }
+  print({ name: 'Rory', age: 2 }, 'name')
+}
+
+{
+  interface Item {
+    name: string
+  }
+  type Arr = Item[]
+
+  const arr: Arr = [
+    { name: '' }
+  ]
+
+  const a = arr[0].name
+}
