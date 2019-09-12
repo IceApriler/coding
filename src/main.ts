@@ -748,3 +748,98 @@ console.warn('===', Color.mixColor('yellow'))
 
   const a = arr[0].name
 }
+
+{
+  const data = {
+    name: '',
+    age: 10
+  }
+  function getValue<T extends object, K extends keyof T>(data: T, name: K): T[K] {
+    return data[name]
+  }
+  getValue(data, 'name') // 'name'满足'keyof data'约束，所以K的约束为字面量'name'
+  // getValue(data, 'city') //  'city'不满足'keyof data'约束，所以K的约束为'keyof data'也就是联合类型'"name" | "age"'
+}
+
+// Required / Partial / Pick
+{
+  interface Obj {
+    name: string
+    age?: number
+  }
+  type req = Required<Obj>
+  type req2 = Partial<Obj>
+  type req3 = Pick<Obj, 'name'>
+}
+
+// conditional type
+{
+  type isTrue<T> = T extends true ? true : false
+  type t1 = isTrue<true>
+  type t2 = isTrue<false>
+  type t3 = isTrue<1>
+}
+
+// 联合类型的行为探索
+{
+  type Exclude<T, U> = T extends U ? never : T
+
+  // eg1: 发现使用联合类型时有类似解构遍历的行为🤔(因为由本例子知道，联合类型并没有作为一个整体，去进行约束)
+  type t = Exclude<'x' | 'a' | 'h', 'x' | 'y' | 'z'> // 由eg5的出结论，会将联合类型解构，将字面量一个一个地代入Exclude中，比如Exclude<'x', 'x'>, Exclude<'x', 'y'> ...
+
+  // eg2: 使用interface尝试
+  interface a {
+    name: string
+    city: '北京' | '武汉'
+    home: string
+  }
+  interface b {
+    name: string
+    age: number
+    school: string
+  }
+  type t2 = Exclude<a, b>
+  const dt: t2 = {
+    name: '',
+    city: '武汉',
+    home: ''
+  }
+  // eg3
+  type Exclude2<T, U> = T extends U ? T : never
+
+  type names = 'x' | 'h'
+  type origin = 'x' | 'y' | 'z'
+  type t3 = Exclude<names, origin> // 找出origin中不存在的name
+  type t4 = Exclude2<names, origin> // 找出origin中存在的name
+
+  // eg4：联合类型作为key的简单应用
+  type keys = 'name' | 'age'
+  type obj = {
+    name: 'rory' | 'jad'
+    age: 80 | 100 | 120
+  }
+  type temp = obj[keys]
+
+  // eg5：联合类型作为泛型 与 内部直接keyof出联合类型 的区别
+  type Exclude3<T, U> = keyof T extends keyof U ? never : keyof T // 这里keyof出的联合类型是一个整体，由此可以推论：Exclude将联合类型作为泛型传入，会先进行解构遍历，解构出的key会相继代入
+  type t5 = Exclude3<a, b> // "name" | "city" | "home"
+  type t6 = Exclude<keyof a, keyof b> // "city" | "home"
+}
+
+// 普通枚举 和 const枚举的区别
+{
+  type a = keyof any
+
+  enum map1 {
+    first,
+    second,
+    third
+  }
+  const enum map2 {
+    first,
+    second,
+    third
+  }
+
+  // console.log(map1, map2) 
+}
