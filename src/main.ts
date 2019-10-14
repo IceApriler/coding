@@ -878,3 +878,9 @@ console.warn('===', Color.mixColor('yellow'))
   }
   get('')
 }
+
+// const 断言：
+{
+  const arr = [ 'a', 'b' ] as const
+  type Foo = (typeof arr)[number] // 'a' | 'b'
+}
