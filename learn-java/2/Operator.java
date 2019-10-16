@@ -3,6 +3,11 @@
  */
 public class Operator {
   public static void main(String[] args) {
+    System.out.println("------------ 数据类型");
+    int intVa1 = 0b11101001;
+    byte binVa2 = (byte)0b11101001;
+    System.out.println(intVa1); // 11101001 => 1+8+32+64+128=233 => 默认占32位
+    System.out.println(binVa2); // 11101001 => 11101000 => 10010111 => -(1+2+4+16)=-23 => 最高位的1变成了符号位
     System.out.println("------------ 赋值和运算");
     int a = 10;
     byte b = 2;
