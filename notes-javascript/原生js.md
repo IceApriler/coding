@@ -388,5 +388,22 @@
   })
   ```
 
+
+
+### 闭包
+
+- 闭包
+
+  ```js
+  function f1() {
+    var a = 2
+    function f2() {
+      a++
+      console.log(a)
+    }
+    return f2;
+  }
+  ```
+
   
 
