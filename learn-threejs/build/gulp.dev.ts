@@ -1,7 +1,6 @@
 import * as fs from "fs-extra"
 import * as gulp from "gulp"
 import * as sourcemaps from "gulp-sourcemaps"
-import * as ts from "gulp-typescript"
 import * as stylus from "gulp-stylus"
 import * as log from "fancy-log"
 import * as postcss from "gulp-postcss"
@@ -9,10 +8,11 @@ import * as gulpIf from "gulp-if"
 import * as cache from "gulp-cached"
 import * as remember from "gulp-remember"
 import chalk from "chalk"
+import typescript from 'rollup-plugin-typescript2'
 import { isFixed } from './gulp.utils'
 const autoprefixer = require('autoprefixer')
 const eslint = require('gulp-eslint')
-const tsProject = ts.createProject('tsconfig.json')
+const rollup = require("gulp-better-rollup")
 
 export type Done = (error?: any) => void
 
@@ -67,7 +67,15 @@ export class Dev {
         .pipe(eslint.format())
         .pipe(gulpIf(isFixed, gulp.dest(this.srcPath) ))
         .pipe(sourcemaps.init())
-        .pipe(tsProject())
+        .pipe(
+          rollup({
+            plugins: [typescript({
+              tsconfig: './tsconfig.json'
+            })]
+          },{
+            format: "iife"
+          })
+        )
         .pipe(sourcemaps.write())
         .pipe(gulp.dest(this.srcPath))
     })
