@@ -67,7 +67,7 @@ export class Dev {
             autoprefixer()
           ])
         )
-        .pipe(gulp.dest(this.srcPath))
+        .pipe(gulp.dest(this.distPath))
     })
     gulp.task("build:ts", async () => {
       const bundle = await rollup.rollup({
