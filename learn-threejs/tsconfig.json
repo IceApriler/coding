@@ -1,6 +1,6 @@
 {
   "include": [
-    "src/**/*.ts"
+    "build/**/*.ts"
   ],
   "compilerOptions": {
     "noImplicitAny": true,
@@ -8,6 +8,7 @@
     "target": "es5",
     "moduleResolution": "node",
     "strictNullChecks": true,
-    "types": ["node"]
+    "types": ["node"],
+    "esModuleInterop": true
   }
 }

@@ -1,27 +1,27 @@
+import * as path from "path"
 import * as fs from "fs-extra"
 import * as gulp from "gulp"
-import * as sourcemaps from "gulp-sourcemaps"
-import * as stylus from "gulp-stylus"
 import * as log from "fancy-log"
-import * as postcss from "gulp-postcss"
-import * as gulpIf from "gulp-if"
-import * as cache from "gulp-cached"
 import * as remember from "gulp-remember"
+import * as rollup from 'rollup'
+import stylus from "gulp-stylus"
+import postcss from "gulp-postcss"
+import typescript from '@rollup/plugin-typescript'
+import resolve from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
 import chalk from "chalk"
-import typescript from 'rollup-plugin-typescript2'
-import { isFixed } from './gulp.utils'
 const autoprefixer = require('autoprefixer')
-const eslint = require('gulp-eslint')
-const rollup = require("gulp-better-rollup")
 
 export type Done = (error?: any) => void
-
 
 export interface IConfig {
   rootPath: string
   tsSrc: string
   srcPath: string
   stylusPath: string
+  distPath: string
+  entryName: string
+  outputPath: string
 }
 
 export class Dev {
@@ -29,13 +29,19 @@ export class Dev {
   readonly tsSrc: string
   readonly srcPath: string
   readonly stylusPath: string
+  readonly distPath: string
+  readonly entryName: string
+  readonly outputPath: string
 
   constructor(config: IConfig) {
-    const { rootPath, tsSrc, srcPath, stylusPath } = config
+    const { rootPath, tsSrc, srcPath, stylusPath, distPath, entryName, outputPath } = config
     this.rootPath = rootPath
     this.tsSrc = tsSrc
     this.srcPath = srcPath
     this.stylusPath = stylusPath
+    this.distPath = distPath
+    this.entryName = entryName
+    this.outputPath = outputPath
 
     this.init()
   }
@@ -44,11 +50,15 @@ export class Dev {
     this.createBuild()
     this.createWatch()
 
-    gulp.task("default", gulp.parallel('build:styl', 'build:ts'))
-    gulp.task('dev', gulp.series(gulp.parallel('build:styl', 'build:ts'), 'watch'))
+    gulp.task("default", gulp.series('clean', gulp.parallel('build:styl', 'build:ts')))
+    gulp.task('dev', gulp.series('clean', gulp.parallel('build:styl', 'build:ts'), 'watch'))
   }
 
   createBuild() {
+    gulp.task("clean", (done) => {
+      fs.emptyDirSync(this.distPath)
+      done()
+    })
     gulp.task("build:styl", () => {
       return gulp.src(this.stylusPath, { base: '' })
         .pipe(stylus())
@@ -59,25 +69,29 @@ export class Dev {
         )
         .pipe(gulp.dest(this.srcPath))
     })
-    gulp.task("build:ts", () => {
-      return gulp.src(this.tsSrc, { base: '' })
-        .pipe(cache('build:ts'))
-        .pipe(remember('build:ts'))
-        .pipe(eslint({ fix: true }))
-        .pipe(eslint.format())
-        .pipe(gulpIf(isFixed, gulp.dest(this.srcPath) ))
-        .pipe(sourcemaps.init())
-        .pipe(
-          rollup({
-            plugins: [typescript({
-              tsconfig: './tsconfig.json'
-            })]
-          },{
-            format: "iife"
-          })
-        )
-        .pipe(sourcemaps.write())
-        .pipe(gulp.dest(this.srcPath))
+    gulp.task("build:ts", async () => {
+      const bundle = await rollup.rollup({
+        input: this.entryName,
+        plugins: [
+          resolve(),
+          commonjs(),
+          typescript({ tsconfig: path.resolve(__dirname, './tsconfig.json') }),
+        ],
+        onwarn(warning) {
+          console.log(warning)
+          // 跳过某些警告
+          if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
+          // 抛出异常
+          if (warning.code === 'NON_EXISTENT_EXPORT') throw new Error(warning.message);
+          // 控制台打印一切警告
+          console.warn(warning.message);
+        }
+      })
+      await bundle.write({
+        file: this.outputPath,
+        format: 'umd',
+        sourcemap: true
+      })
     })
   }
 
@@ -93,7 +107,6 @@ export class Dev {
           fs.remove(_filename, () => {
             log.info(`Finished ${chalk.cyan("'delete:ts'")}`)
           })
-          delete (cache.caches['build:ts'] as any)[filename]
           remember.forget('build:ts', filename)
         })
         stylusWatcher.on(event, (filename: string) => {
